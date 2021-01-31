@@ -1,0 +1,53 @@
+from "scanner.du" import Scanner;
+from "error.du" import error;
+
+var hadError = false;
+
+def runFile(path) {
+    var contents;
+
+    with(path, "r") {
+        contents = file.read();
+    }
+
+    run(contents);
+
+    if (hadError) System.exit(65);
+}
+
+def runPrompt() {
+    while {
+        const content = input(">>> ");
+        if (content == "") {
+            break;
+        }
+
+        run(content);
+        hadError = false;
+    }
+}
+
+def run(source) {
+    const scanner = Scanner(source);
+    const tokens = scanner.scanTokens();
+
+    for (var i = 0; i < tokens.len(); i += 1) {
+        print(tokens[i].toString());
+    }
+}
+
+def main() {
+    if (System.argv.len() > 2) {
+        print("Usage: dictu lox.du [file.lox]");
+        System.exit(65);
+    } else if (System.argv.len() == 2) {
+        runFile(System.argv[1]);
+    } else {
+        runPrompt();
+    }
+}
+
+// Only run if executed directly
+if (System.argv[0] == __file__) {
+    main();
+}

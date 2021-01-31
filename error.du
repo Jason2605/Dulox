@@ -1,0 +1,7 @@
+def report(line, where, message) {
+    print("[Line {}] Error{}: {}".format(line, where, message));
+}
+
+def error(line, message) {
+    report(line, "", message);
+}

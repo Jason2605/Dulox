@@ -1,0 +1,51 @@
+// Mimic an ENUM
+abstract class TokenType {
+    // Single-character tokens.
+    var LEFT_PAREN            = 0;
+    var RIGHT_PAREN           = 1;
+    var LEFT_BRACE            = 2;
+    var RIGHT_BRACE           = 3;
+    var COMMA                 = 4;
+    var DOT                   = 5;
+    var MINUS                 = 6;
+    var PLUS                  = 7;
+    var SEMICOLON             = 8;
+    var SLASH                 = 9;
+    var STAR                  = 10;
+
+    // One or two character tokens.
+    var BANG                  = 11;
+    var BANG_EQUAL            = 12;
+    var EQUAL                 = 13;
+    var EQUAL_EQUAL           = 14;
+    var GREATER               = 15;
+    var GREATER_EQUAL         = 16;
+    var LESS                  = 17;
+    var LESS_EQUAL            = 18;
+
+    // Literals.
+    var IDENTIFIER            = 19;
+    var STRING                = 20;
+    var NUMBER                = 21;
+
+    // Keywords.
+    var AND                   = 22;
+    var CLASS                 = 23;
+    var ELSE                  = 24;
+    var FALSE                 = 25;
+    var FUN                   = 26;
+    var FOR                   = 27;
+    var IF                    = 28;
+    var NIL                   = 29;
+    var OR                    = 30;
+    var PRINT                 = 31;
+    var RETURN                = 32;
+    var SUPER                 = 33;
+    var THIS                  = 34;
+    var TRUE                  = 35;
+    var VAR                   = 36;
+    var WHILE                 = 37;
+
+
+    var EOF                   = 38;
+}

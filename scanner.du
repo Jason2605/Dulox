@@ -1,0 +1,191 @@
+from "error.du" import error;
+
+from "token.du" import Token;
+from "tokenType.du" import TokenType;
+
+class Scanner {
+    private tokens;
+    private start;
+    private current;
+    private line;
+    private keywords;
+
+    init(private source) {
+        this.tokens = [];
+
+        this.start = 0;
+        this.current = 0;
+        this.line = 1;
+
+        this.keywords = {
+            "and":    TokenType.AND,
+            "class":  TokenType.CLASS,
+            "else":   TokenType.ELSE,
+            "false":  TokenType.FALSE,
+            "for":    TokenType.FOR,
+            "fun":    TokenType.FUN,
+            "if":     TokenType.IF,
+            "nil":    TokenType.NIL,
+            "or":     TokenType.OR,
+            "print":  TokenType.PRINT,
+            "return": TokenType.RETURN,
+            "super":  TokenType.SUPER,
+            "this":   TokenType.THIS,
+            "true":   TokenType.THIS,
+            "var":    TokenType.VAR,
+            "while":  TokenType.WHILE
+        };
+    }
+
+    private isAtEnd() {
+        return this.current >= this.source.len();
+    }
+
+    private advance() {
+        this.current += 1;
+        return this.source[this.current - 1];
+    }
+
+    private addToken(type, literal=nil) {
+        const content = this.source[this.start:this.current];
+        this.tokens.push(Token(type, content, literal, this.line));
+    }
+
+    private match(expected) {
+        if (this.isAtEnd()) return false;
+        if (this.source[this.current] != expected) return false;
+
+        this.current += 1;
+        return true;
+    }
+
+    private peek() {
+        if (this.isAtEnd()) return "~"; // Return tilde as sentinel
+        return this.source[this.current];
+    }
+
+    private peekNext() {
+        if (this.current + 1 >= this.source.len()) return "";
+        return source[this.current + 1];
+    }
+
+    private string() {
+        while (this.peek() != '"' and !this.isAtEnd()) {
+            if (this.peek() == '\n') this.line += 1;
+            this.advance();
+        }
+
+        if (this.isAtEnd()) {
+            error(this.line, "Unterminated string.");
+            return;
+        }
+
+        // The closing ".
+        this.advance();
+
+        // Trim the surrounding quotes.
+        const value = this.source[this.start + 1: this.current - 1];
+        this.addToken(TokenType.STRING, value);
+    }
+
+    private isDigit(c) {
+        return "0123456789".contains(c);
+    }
+
+    private isAlpha(c) {
+        return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_".contains(c);
+    }
+
+    private isAlphaNumeric(c) {
+        return this.isAlpha(c) or this.isDigit(c);
+    }
+
+    private number() {
+        while (this.isDigit(this.peek())) this.advance();
+
+        // Look for a fractional part.
+        if (this.peek() == '.' and this.isDigit(this.peekNext())) {
+            // Consume the "."
+            this.advance();
+
+            while (this.isDigit(this.peek())) this.advance();
+        }
+
+        this.addToken(TokenType.NUMBER, this.source[this.start:this.current].toNumber().unwrap());
+    }
+
+    private identifier() {
+        while (this.isAlphaNumeric(this.peek())) this.advance();
+        const keyword = this.keywords.get(this.source[this.start:this.current], false);
+
+        if (keyword) {
+            this.addToken(keyword);
+        } else {
+            this.addToken(TokenType.IDENTIFIER);
+        }
+    }
+
+    private scanToken() {
+        const char = this.advance();
+
+        if (char == "(")
+            this.addToken(TokenType.LEFT_PAREN);
+        else if (char == ")")
+            this.addToken(TokenType.RIGHT_PAREN);
+        else if (char == "{")
+            this.addToken(TokenType.LEFT_BRACE);
+        else if (char == "}")
+            this.addToken(TokenType.RIGHT_BRACE);
+        else if (char == ",")
+            this.addToken(TokenType.COMMA);
+        else if (char == ".")
+            this.addToken(TokenType.DOT);
+        else if (char == "-")
+            this.addToken(TokenType.MINUS);
+        else if (char == "+")
+            this.addToken(TokenType.PLUS);
+        else if (char == ";")
+            this.addToken(TokenType.SEMICOLON);
+        else if (char == "*")
+            this.addToken(TokenType.STAR);
+        else if (char == "!")
+            this.addToken(this.match("=") ? TokenType.BANG_EQUAL : TokenType.BANG);
+        else if (char == "=")
+            this.addToken(this.match("=") ? TokenType.EQUAL_EQUAL : TokenType.EQUAL);
+        else if (char == "<")
+            this.addToken(this.match("=") ? TokenType.LESS_EQUAL : TokenType.LESS);
+        else if (char == ">")
+            this.addToken(this.match("=") ? TokenType.GREATER_EQUAL : TokenType.GREATER);
+        else if (char == "/") {
+            if (this.match("/")) {
+                // A comment goes until the end of the line.
+                while (this.peek() != "\n" and !this.isAtEnd()) this.advance();
+            } else {
+                this.addToken(TokenType.SLASH);
+            }
+        } else if (["\t", " ", "\r"].contains(char)) {
+            // Ignore whitespace
+        } else if (char == "\n")
+            this.line += 1;
+        else if (char == "\"")
+            this.string();
+        else if (this.isDigit(char))
+            this.number();
+        else if (this.isAlpha(char))
+            this.identifier();
+        else {
+            error(this.line, "Unexpected character");
+        }
+    }
+
+    scanTokens() {
+        while (!this.isAtEnd()) {
+            // We are at the beginning of the next lexeme.
+            this.start = this.current;
+            this.scanToken();
+        }
+
+        this.tokens.push(Token(TokenType.EOF, "", nil, 0));
+        return this.tokens;
+    }
+}

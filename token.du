@@ -1,0 +1,7 @@
+class Token {
+    init(var type, var lexeme, var literal, var line) {}
+
+    toString() {
+        return "{} {} {}".format(this.type, this.lexeme, this.literal);
+    }
+}
