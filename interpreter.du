@@ -1,0 +1,116 @@
+from "tokenType.du" import TokenType;
+
+class Interpreter {
+    interpret(expression) {
+        const value = this.evaluate(expression);
+        print(value);
+    }
+
+    visitLiteralExpr(expr) {
+        return expr.value;
+    }
+
+    visitGroupingExpr(expr) {
+        return expr.expression;
+    }
+
+    private evaluate(expr) {
+        return expr.accept(this);
+    }
+
+    private isTruthy(object) {
+        if (object == nil) return false;
+        if (type(object) == "bool") return object;
+        return true;
+    }
+
+    private checkNumberOperand(operator, operand) {
+        if (type(operand) == "number") return;
+        print("Operand must be a number.");
+        // TODO: Revise
+        System.exit(1);
+    }
+
+    private checkNumberOperands(operator, left, right) {
+        if (type(left) == "number" and type(right) == "number") return;
+        print("Operands must be a numbers.");
+        // TODO: Revise
+        System.exit(1);
+    }
+
+    visitUnaryExpr(expr) {
+        const right = evaluate(expr.right);
+
+        const tokens = {
+            TokenType.MINUS: def(right) => {
+                checkNumberOperand(expr.operator, right);
+                return -right;
+            },
+            TokenType.MINUS: def(right) => !this.isTruthy(right),
+        };
+
+        const func = tokens.get(expr.operator.type, false);
+        if (func) {
+            return func(right);
+        }
+
+        // Unreachable.
+        return nil;
+    }
+
+    private isEqual(a, b) {
+        if (a == nil and b == nil) return true;
+        if (a == nil) return false;
+
+        return a == b;
+    }
+
+    visitBinaryExpr(expr) {
+        const left = this.evaluate(expr.left);
+        const right = this.evaluate(expr.right); 
+
+        const tokens = {
+            TokenType.MINUS: def(left, right) => left - right,
+            TokenType.SLASH: def(left, right) => left / right,
+            TokenType.STAR:  def(left, right) => left * right,
+            TokenType.PLUS:  def(left, right) => {
+                if (type(left) == "string" and type(right) == "string") {
+                    return left + right;
+                }
+
+                if (type(left) == "number" and type(right) == "number") {
+                    return left + right;
+                }
+
+                print("Operands must be two numbers or two strings.");
+                System.exit(1);
+            },
+            TokenType.GREATER:        def(left, right) => {
+                this.checkNumberOperands(expr.operator, left, right);
+                return left > right;
+            },
+            TokenType.GREATER_EQUAL:  def(left, right) => {
+                this.checkNumberOperands(expr.operator, left, right);
+                return left >= right;
+            },
+            TokenType.LESS:           def(left, right) => {
+                this.checkNumberOperands(expr.operator, left, right);
+                return left < right;
+            },
+            TokenType.LESS_EQUAL:     def(left, right) => {
+                this.checkNumberOperands(expr.operator, left, right);
+                return left <= right;
+            },
+            TokenType.BANG_EQUAL:     def(left, right) => !this.isEqual(left, right),
+            TokenType.EQUAL_EQUAL:    def(left, right) => this.isEqual(left, right),
+        };
+
+        const func = tokens.get(expr.operator.type, false);
+        if (func) {
+            return func(left, right);
+        }
+
+        // Unreachable.
+        return nil;
+    }
+}

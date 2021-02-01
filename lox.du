@@ -1,9 +1,12 @@
 from "scanner.du" import Scanner;
 from "parser.du" import Parser;
+from "interpreter.du" import Interpreter;
 
 from "error.du" import ErrorHandling;
 
 class Lox {
+    var interpreter = Interpreter();
+
     private runFile(path) {
         var contents;
 
@@ -36,9 +39,11 @@ class Lox {
 
         if (ErrorHandling.hadError) return;
 
-        for (var i = 0; i < tokens.len(); i += 1) {
-            print(tokens[i].toString());
-        }
+        Lox.interpreter.interpret(expression);
+
+        // for (var i = 0; i < tokens.len(); i += 1) {
+        //     print(tokens[i].toString());
+        // }
     }
 
     main() {

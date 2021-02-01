@@ -50,7 +50,12 @@ class Parser {
     }
 
     private expression() {
-        return this.equality();
+        const result = this.equality();
+
+        if (type(result) == "result")
+            return result;
+
+        return Success(result);
     }
 
     private equality() {
@@ -74,7 +79,7 @@ class Parser {
             expr = Visitor.Binary(expr, operator, right);
         }
 
-        return Success(expr);
+        return expr;
     }
 
     private term() {
@@ -86,7 +91,7 @@ class Parser {
             expr = Visitor.Binary(expr, operator, right);
         }
 
-        return Success(expr);
+        return expr;
     }
 
     private factor() {
@@ -98,7 +103,7 @@ class Parser {
             expr = Visitor.Binary(expr, operator, right);
         }
 
-        return Success(expr);
+        return expr;
     }
 
     private unary() {
@@ -112,18 +117,18 @@ class Parser {
     }
 
     private primary() {
-        if (this.match([TokenType.FALSE])) return Success(Visitor.Literal(false));
-        if (this.match([TokenType.TRUE])) return Success(Visitor.Literal(true));
-        if (this.match([TokenType.NIL])) return Success(Visitor.Literal(nil));
+        if (this.match([TokenType.FALSE])) return Visitor.Literal(false);
+        if (this.match([TokenType.TRUE])) return Visitor.Literal(true);
+        if (this.match([TokenType.NIL])) return Visitor.Literal(nil);
 
         if (this.match([TokenType.NUMBER, TokenType.STRING])) {
-            return Success(Visitor.Literal(this.previous().literal));
+            return Visitor.Literal(this.previous().literal);
         }
 
         if (this.match([TokenType.LEFT_PAREN])) {
             const expr = this.expression();
             this.consume(RIGHT_PAREN, "Expect ')' after expression.");
-            return Success(Visitor.Grouping(expr));
+            return Visitor.Grouping(expr);
         }
 
         ErrorHandling.error(this.peek(), "Expect Expression");
