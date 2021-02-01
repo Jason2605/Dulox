@@ -1,0 +1,61 @@
+
+import "visitor.du" as Visitor;
+
+from "token.du" import Token;
+from "tokenType.du" import TokenType;
+
+
+class AstPrinter {
+    print(expr) {
+        return expr.accept(this);
+    }
+
+    visitBinaryExpr(expr) {
+        return this.parenthesize(expr.operator.lexeme, [expr.left, expr.right]);
+    }
+
+    visitGroupingExpr(expr) {
+        return this.parenthesize('group', [expr.expression]);
+    }
+
+    visitLiteralExpr(expr) {
+        return expr.value.toString();
+    }
+
+    visitUnaryExpr(expr) {
+        return this.parenthesize(expr.operator.lexeme, [expr.right]);
+    }
+
+    private parenthesize(name, exprs) {
+        const fragments = [];
+        fragments.push('(');
+        fragments.push(name);
+
+        for (var i = 0; i < exprs.len(); i += 1) {
+            fragments.push(' ');
+            fragments.push(exprs[i].accept(this));
+        }
+
+        fragments.push(')');
+
+        return fragments.join("");
+    }
+}
+
+
+def main() {
+    const expression = Visitor.Binary(
+        Visitor.Unary(
+            Token(TokenType.MINUS, '-', nil, 1),
+            Visitor.Literal(123)
+        ),
+        Token(TokenType.STAR, '*', nil, 1),
+        Visitor.Grouping(
+            Visitor.Literal(45.67)
+        )
+    );
+    print(AstPrinter().print(expression));
+}
+
+if (System.argv[0] == __file__) 
+    main();

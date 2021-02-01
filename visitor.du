@@ -1,0 +1,51 @@
+abstract class Expr {
+    abstract accept(visitor)
+}
+
+class Assign < Expr {
+    init(var name, var value) {}
+
+    accept(visitor) {
+        return visitor.visitAssignExpr(this);
+    }
+}
+
+class Binary < Expr {
+    init(var left, var operator, var right) {}
+
+    accept(visitor) {
+        return visitor.visitBinaryExpr(this);
+    }
+}
+
+class Grouping < Expr {
+    init(var expression) {}
+
+    accept(visitor) {
+        return visitor.visitGroupingExpr(this);
+    }
+}
+
+class Literal < Expr {
+    init(var value) {}
+
+    accept(visitor) {
+        return visitor.visitLiteralExpr(this);
+    }
+}
+
+class Unary < Expr {
+    init(var operator, var right) {}
+
+    accept(visitor) {
+        return visitor.visitUnaryExpr(this);
+    }
+}
+
+class Variable < Expr {
+    init(var name) {}
+
+    accept(visitor) {
+        return visitor.visitVariableExpr(this);
+    }
+}
