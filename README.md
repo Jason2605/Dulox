@@ -25,7 +25,7 @@ dictu lox.du file.lox
 
 ### Note
 
-Dulox implements the Java section of the [craftinginterpreters book](https://craftinginterpreters.com/) and is at section 5.1
+Dulox implements the Java section of the [craftinginterpreters book](https://craftinginterpreters.com/) and is at section 8.1
 
 ## License
 
