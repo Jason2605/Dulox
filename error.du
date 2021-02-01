@@ -1,7 +1,22 @@
-def report(line, where, message) {
-    print("[Line {}] Error{}: {}".format(line, where, message));
-}
+from "tokenType.du" import TokenType;
 
-def error(line, message) {
-    report(line, "", message);
+class ErrorHandling {
+    var hadError = false;
+
+    static report(line, where, message) {
+        print("[Line {}] Error{}: {}".format(line, where, message));
+        ErrorHandling.hadError = true;
+    }
+
+    static error(lineOrToken, message) {
+        if (type(lineOrToken) == "string") {
+            ErrorHandling.report(lineOrToken, "", message);
+        } else {
+            if (lineOrToken.type == TokenType.EOF) {
+                ErrorHandling.report(lineOrToken.line, " at end", message);
+            } else {
+                ErrorHandling.report(lineOrToken.line, " at '" + lineOrToken.lexeme + "'", message);
+            }
+        }
+    }
 }

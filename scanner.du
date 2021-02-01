@@ -1,4 +1,4 @@
-from "error.du" import error;
+from "error.du" import ErrorHandling;
 
 from "token.du" import Token;
 from "tokenType.du" import TokenType;
@@ -76,7 +76,7 @@ class Scanner {
         }
 
         if (this.isAtEnd()) {
-            error(this.line, "Unterminated string.");
+            ErrorHandling.error(this.line, "Unterminated string.");
             return;
         }
 
@@ -174,7 +174,7 @@ class Scanner {
         else if (this.isAlpha(char))
             this.identifier();
         else {
-            error(this.line, "Unexpected character");
+            ErrorHandling.error(this.line, "Unexpected character");
         }
     }
 

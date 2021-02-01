@@ -1,53 +1,60 @@
 from "scanner.du" import Scanner;
-from "error.du" import error;
+from "parser.du" import Parser;
 
-var hadError = false;
+from "error.du" import ErrorHandling;
 
-def runFile(path) {
-    var contents;
+class Lox {
+    private runFile(path) {
+        var contents;
 
-    with(path, "r") {
-        contents = file.read();
-    }
-
-    run(contents);
-
-    if (hadError) System.exit(65);
-}
-
-def runPrompt() {
-    while {
-        const content = input(">>> ");
-        if (content == "") {
-            break;
+        with(path, "r") {
+            contents = file.read();
         }
 
-        run(content);
-        hadError = false;
+        this.run(contents);
+
+        if (ErrorHandling.hadError) System.exit(65);
+    }
+
+    private runPrompt() {
+        while {
+            const content = input(">>> ");
+            if (content == "") {
+                break;
+            }
+
+            this.run(content);
+            ErrorHandling.hadError = false;
+        }
+    }
+
+    private run(source) {
+        const scanner = Scanner(source);
+        const tokens = scanner.scanTokens();
+        const parser = Parser(tokens);
+        const expression = parser.parse();
+
+        if (ErrorHandling.hadError) return;
+
+        for (var i = 0; i < tokens.len(); i += 1) {
+            print(tokens[i].toString());
+        }
+    }
+
+    main() {
+        if (System.argv.len() > 2) {
+            print("Usage: dictu lox.du [file.lox]");
+            System.exit(65);
+        } else if (System.argv.len() == 2) {
+            this.runFile(System.argv[1]);
+        } else {
+            this.runPrompt();
+        }
     }
 }
 
-def run(source) {
-    const scanner = Scanner(source);
-    const tokens = scanner.scanTokens();
-
-    for (var i = 0; i < tokens.len(); i += 1) {
-        print(tokens[i].toString());
-    }
-}
-
-def main() {
-    if (System.argv.len() > 2) {
-        print("Usage: dictu lox.du [file.lox]");
-        System.exit(65);
-    } else if (System.argv.len() == 2) {
-        runFile(System.argv[1]);
-    } else {
-        runPrompt();
-    }
-}
 
 // Only run if executed directly
 if (System.argv[0] == __file__) {
-    main();
+    Lox().main();
 }

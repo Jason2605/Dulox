@@ -1,0 +1,168 @@
+import "visitor.du" as Visitor;
+
+from "token.du" import Token;
+from "tokenType.du" import TokenType;
+
+from "error.du" import ErrorHandling;
+
+class Parser {
+    private current;
+
+    init(private tokens) {
+        this.current = 0;
+    }
+
+    parse() {
+        return this.expression().match(def (success) => success, def (error) => nil);
+    }
+
+    private isAtEnd() {
+        return this.peek().type == TokenType.EOF;
+    }
+
+    private peek() {
+        return this.tokens[this.current];
+    }
+
+    private previous() {
+        return this.tokens[this.current - 1];
+    }
+
+    private advance() {
+        if (!this.isAtEnd()) this.current += 1;
+        return this.previous();
+    }
+
+    private check(type) {
+        if (this.isAtEnd()) return false;
+        return this.peek().type == type;
+    }
+
+    private match(types) {
+        for (var i = 0; i < types.len(); i += 1) {
+            if (this.check(types[i])) {
+                this.advance();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private expression() {
+        return this.equality();
+    }
+
+    private equality() {
+        var expr = this.comparison();
+
+        while (this.match([TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL])) {
+            const operator = this.previous();
+            const right = this.comparison();
+            expr = Visitor.Binary(expr, operator, right);
+        }
+
+        return Success(expr);
+    }
+
+    private comparison() {
+        var expr = this.term();
+
+        while (this.match([TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL])) {
+            const operator = this.previous();
+            const right = this.term();
+            expr = Visitor.Binary(expr, operator, right);
+        }
+
+        return Success(expr);
+    }
+
+    private term() {
+        var expr = this.factor();
+
+        while (this.match([TokenType.MINUS, TokenType.PLUS])) {
+            const operator = this.previous();
+            const right = this.factor();
+            expr = Visitor.Binary(expr, operator, right);
+        }
+
+        return Success(expr);
+    }
+
+    private factor() {
+        var expr = this.unary();
+
+        while (this.match([TokenType.SLASH, TokenType.STAR])) {
+            const operator = this.previous();
+            const right = this.unary();
+            expr = Visitor.Binary(expr, operator, right);
+        }
+
+        return Success(expr);
+    }
+
+    private unary() {
+        if (this.match([TokenType.BANG, TokenType.MINUS])) {
+            const operator = this.previous();
+            const right = this.unary();
+            return Visitor.Unary(operator, right);
+        }
+
+        return this.primary();
+    }
+
+    private primary() {
+        if (this.match([TokenType.FALSE])) return Success(Visitor.Literal(false));
+        if (this.match([TokenType.TRUE])) return Success(Visitor.Literal(true));
+        if (this.match([TokenType.NIL])) return Success(Visitor.Literal(nil));
+
+        if (this.match([TokenType.NUMBER, TokenType.STRING])) {
+            return Success(Visitor.Literal(this.previous().literal));
+        }
+
+        if (this.match([TokenType.LEFT_PAREN])) {
+            const expr = this.expression();
+            this.consume(RIGHT_PAREN, "Expect ')' after expression.");
+            return Success(Visitor.Grouping(expr));
+        }
+
+        ErrorHandling.error(this.peek(), "Expect Expression");
+        return Error("Expect Expression");
+    }
+
+    private consume(type, message) {
+        if (this.check(type)) return this.advance();
+
+        // TODO: Check
+        return this.error(this.peek(), message);
+    }
+
+    private error(token, message) {
+        ErrorHandling.error(token, message);
+        return Error("Parse error");
+    }
+
+    private synchronize() {
+        this.advance();
+
+        while (!this.isAtEnd()) {
+            if (this.previous().type == TokenType.SEMICOLON) return;
+
+            const types = [
+                TokenType.CLASS,
+                TokenType.FUN,
+                TokenType.VAR,
+                TokenType.FOR,
+                TokenType.IF,
+                TokenType.WHILE,
+                TokenType.PRINT,
+                TokenType.RETURN
+            ];
+
+            if (types.contains(this.peek().type))
+                return;
+
+            this.advance();
+        }
+    }
+}
